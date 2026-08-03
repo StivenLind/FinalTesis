@@ -1,0 +1,888 @@
+/* =========================================
+   1. VARIABLES DE COLOR (Paleta Unificada)
+   ========================================= */
+:root {
+    --azul-oscuro: #0a2540;
+    /* Header, footers y textos destacados */
+    --azul-medio: #1164a3;
+    /* Botones, acentos y enlaces */
+    --azul-claro: #e6f0fa;
+    /* Fondos suaves y hovers */
+    --crema-claro: #f7f9fd;
+    /* Fondo principal general */
+    --crema-oscuro: #f2ebd9;
+    /* Fondos secundarios y tarjetas */
+    --texto-principal: #2d3748;
+    --texto-secundario: #4a5568;
+    --blanco: #ffffff;
+
+    /* Sombra estándar para diseño profesional */
+    --sombra-suave: 0 8px 24px rgba(10, 37, 64, 0.08);
+    --sombra-fuerte: 0 10px 30px rgba(10, 37, 64, 0.15);
+}
+
+/* =========================================
+   2. ESTILOS GENERALES
+   ========================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    scroll-behavior: smooth;
+}
+
+
+body {
+    background-color: var(--crema-claro);
+    color: var(--texto-principal);
+    line-height: 1.7;
+}
+
+h1,
+h2,
+h3 {
+    color: var(--azul-oscuro);
+    margin-bottom: 15px;
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+p {
+    margin-bottom: 18px;
+    color: var(--texto-secundario);
+    font-size: 1.1rem;
+}
+
+/* =========================================
+   3. BARRA DE NAVEGACIÓN (Clásica y Dashboard)
+   ========================================= */
+header {
+    background-color: var(--azul-oscuro);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: var(--sombra-fuerte);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 20px;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--blanco);
+}
+
+.nav-logo {
+    height: 45px;
+    width: auto;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--crema-claro);
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+nav a:hover {
+    color: var(--azul-claro);
+}
+
+/* Indicador de página activa */
+.active {
+    color: var(--azul-claro) !important;
+    font-weight: 700;
+    border-bottom: 3px solid var(--azul-claro);
+    padding-bottom: 5px;
+}
+
+/* =========================================
+   4. ESTRUCTURA DE CONTENIDO Y SECCIONES
+   ========================================= */
+section {
+    padding: 50px 40px;
+    max-width: 1000px;
+    margin: 40px auto;
+    background-color: var(--blanco);
+    border-radius: 16px;
+    box-shadow: var(--sombra-suave);
+    border-top: 5px solid var(--azul-medio);
+}
+
+/* Listas ordenadas visualmente */
+ul {
+    margin-left: 20px;
+    margin-bottom: 20px;
+    color: var(--texto-secundario);
+}
+
+li {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+/* =========================================
+   5. DISEÑO DE DOS COLUMNAS (Texto + Imagen)
+   ========================================= */
+.two-columns {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    margin-top: 30px;
+}
+
+.text-column {
+    flex: 1;
+}
+
+.image-column {
+    flex: 1;
+    text-align: center;
+}
+
+.feature-img {
+    max-width: 80%;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: var(--sombra-fuerte);
+    border: 4px solid var(--crema-oscuro);
+    transition: transform 0.3s ease;
+}
+
+.feature-img:hover {
+    transform: scale(1.2);
+}
+
+/* =========================================
+   6. BOTONES
+   ========================================= */
+button,
+.btn-prueba,
+.btn-ver-mas {
+    display: inline-block;
+    background-color: var(--azul-medio);
+    color: var(--blanco);
+    border: none;
+    padding: 12px 28px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 30px;
+    /* Botones estilo píldora más modernos */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(17, 100, 163, 0.4);
+    margin-top: 15px;
+}
+
+button:hover,
+.btn-prueba:hover,
+.btn-ver-mas:hover {
+    background-color: var(--azul-oscuro);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(10, 37, 64, 0.5);
+}
+
+/* =========================================
+   7. PÁGINA DE TÉCNICA (Estilo Dashboard)
+   ========================================= */
+body.pagina-tecnica {
+    background-color: var(--azul-oscuro);
+    color: var(--blanco);
+}
+
+.header-tecnica {
+    background-color: var(--crema-claro);
+    color: var(--azul-oscuro);
+    box-shadow: var(--sombra-suave);
+}
+
+.nav-tecnica {
+    height: 90px;
+    max-width: 100%;
+    padding: 0 40px;
+}
+
+.nav-brand-box {
+    background-color: var(--azul-oscuro);
+    color: var(--blanco);
+    height: 110px;
+    padding: 15px 35px;
+    border-radius: 0 0 20px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transform: translateY(10px);
+    box-shadow: var(--sombra-fuerte);
+}
+
+.nav-brand-box h2 {
+    margin: 0;
+    color: var(--blanco);
+    font-size: 1.6rem;
+}
+
+.nav-brand-box p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--azul-claro);
+}
+
+.nav-links a {
+    color: var(--texto-principal);
+    font-weight: 600;
+}
+
+.active-pill {
+    background-color: var(--azul-claro);
+    color: var(--azul-oscuro) !important;
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: none;
+}
+
+/* Dashboard Contenido */
+.tecnica-dashboard {
+    padding: 50px 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.titulo-dashboard {
+    color: var(--blanco);
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 50px;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+    margin-bottom: 50px;
+}
+
+.tech-card {
+    background-color: var(--crema-claro);
+    border-radius: 16px;
+    padding: 20px;
+    color: var(--texto-principal);
+    box-shadow: var(--sombra-fuerte);
+    transition: transform 0.3s ease;
+    border-top: 5px solid var(--azul-claro);
+}
+
+.tech-card:hover {
+    transform: translateY(-8px);
+}
+
+.tech-card img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 18px;
+}
+
+/* Caja de filtros */
+.filtros-box {
+    background-color: var(--crema-oscuro);
+    border-radius: 16px;
+    padding: 25px 35px;
+    color: var(--texto-principal);
+    box-shadow: var(--sombra-suave);
+}
+
+.filtros-selects {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.select-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background-color: var(--blanco);
+    font-size: 1rem;
+}
+
+.filtros-tags {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background-color: var(--azul-oscuro);
+    color: var(--blanco);
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* =========================================
+   8. CÁMARA (BIOMECÁNICA)
+   ========================================= */
+.camera-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--blanco);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: var(--sombra-fuerte);
+    margin-top: 20px;
+    border-top: 5px solid var(--azul-medio);
+}
+
+video,
+canvas {
+    border: 5px solid var(--azul-oscuro);
+    border-radius: 12px;
+    background-color: #000;
+    margin-bottom: 20px;
+    max-width: 100%;
+    box-shadow: var(--sombra-suave);
+}
+
+/* =========================================
+   9. FOOTER
+   ========================================= */
+footer {
+    background-color: var(--azul-oscuro);
+    color: var(--azul-claro);
+    text-align: center;
+    padding: 30px 20px;
+    margin-top: 60px;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+}
+
+/* =========================================
+   10. RESPONSIVIDAD (Móviles y Tablets)
+   ========================================= */
+@media (max-width: 900px) {
+    .two-columns {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    section {
+        padding: 30px 20px;
+        margin: 20px 15px;
+    }
+
+    nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .nav-tecnica {
+        flex-direction: column;
+        height: auto;
+        padding: 20px;
+    }
+
+    .nav-brand-box {
+        transform: none;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        height: auto;
+    }
+}
+
+/* =========================================
+   11. SECCIÓN HERO (Pantalla completa Inicio)
+   ========================================= */
+.hero-section {
+    /* Fondo con un filtro azul oscuro semitransparente sobre tu imagen */
+    /* CORRECCION: Se cambio 'images/Segunda.jpeg' por 'images/Segunda.jpeg' */
+    background: linear-gradient(rgba(6, 42, 78, 0.85), rgba(7, 41, 75, 0.85)), url('images/88.jpeg') no-repeat center center;
+    background-size: cover;
+    /* ... resto de tus estilos ... */
+
+
+    /* Ocupa el alto de la pantalla restante */
+    height: 80vh;
+    min-height: 500px;
+
+    /* Anula los estilos de la tarjeta blanca para que esta ocupe el 100% */
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+
+    /* Centra el contenido */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 800px;
+    padding: 20px;
+}
+
+.hero-content h3 {
+    color: var(--azul-claro);
+    font-size: 2.2rem;
+    font-style: italic;
+    font-weight: 400;
+    margin-bottom: 15px;
+    font-family: 'Georgia', serif;
+    /* Da el toque elegante de la imagen de referencia */
+}
+
+.hero-content h1 {
+    color: var(--blanco);
+    font-size: 4.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    letter-spacing: 2px;
+    line-height: 1.1;
+}
+
+.btn-hero {
+    display: inline-block;
+    background-color: var(--azul-medio);
+    color: var(--blanco);
+    padding: 20px 45px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 5px;
+    /* Un poco más cuadrado, igual a la foto */
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn-hero:hover {
+    background-color: var(--azul-claro);
+    color: var(--azul-oscuro);
+    transform: scale(1.05);
+}
+
+/* Responsividad para la sección Hero en celulares */
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2.8rem;
+    }
+
+    .hero-content h3 {
+        font-size: 1.5rem;
+    }
+
+    .hero-section {
+        height: 70vh;
+    }
+}
+
+/* =========================================
+   12. SECCIÓN INTERACTIVA (Cajas Flotantes)
+   ========================================= */
+
+.recursos-interactivos {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 40px auto;
+}
+
+/* Contenedor de las dos cajas superiores */
+.cajas-flotantes-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* Estilo de la Caja Flotante */
+.caja-flotante {
+    flex: 1;
+    background-color: var(--crema-oscuro);
+    padding: 25px;
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: var(--sombra-suave);
+    transition: all 0.3s ease;
+    border-bottom: 5px solid transparent;
+    text-align: center;
+}
+
+.caja-flotante h3 {
+    color: var(--azul-oscuro);
+    margin-bottom: 10px;
+}
+
+.caja-flotante p {
+    margin-bottom: 0;
+    font-size: 1rem;
+}
+
+/* Efectos Hover y Activo */
+.caja-flotante:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--sombra-fuerte);
+}
+
+.active-caja {
+    background-color: var(--blanco);
+    border-bottom: 5px solid #ff5a1f;
+    /* Tono naranja de la imagen original */
+    box-shadow: var(--sombra-fuerte);
+}
+
+/* Ocultar/Mostrar Contenido */
+.contenido-desplegable {
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+.active-content {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Grillas de las tarjetas de información */
+.articulos-grid,
+.ejercicios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.articulo-card,
+.ejercicio-card {
+    background-color: var(--blanco);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: var(--sombra-suave);
+    border-left: 5px solid var(--azul-medio);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.ejercicio-card {
+    border-left: 5px solid #ff5a1f;
+    /* Acento naranja */
+}
+
+.articulo-card h3,
+.ejercicio-card h3 {
+    font-size: 1.3rem;
+}
+
+.badge-naranja {
+    background-color: #ff5a1f;
+    color: var(--blanco);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.link-accion {
+    color: var(--azul-medio);
+    font-weight: bold;
+    text-decoration: none;
+    margin-top: 15px;
+    display: inline-block;
+    transition: color 0.3s;
+}
+
+.ejercicio-card .link-accion {
+    color: #ff5a1f;
+}
+
+.link-accion:hover {
+    color: var(--azul-oscuro);
+    text-decoration: underline;
+}
+
+/* Responsividad para móviles */
+@media (max-width: 768px) {
+    .cajas-flotantes-container {
+        flex-direction: column;
+    }
+}
+
+/* =========================================
+   13. CITA MOTIVACIONAL (Caja Flotante Full-Width)
+   ========================================= */
+
+.cita-flotante-full {
+    width: 100%;
+    background-color: var(--blanco);
+    padding: 20px 20px;
+    margin: 1px 1;
+    /* Da espacio para respirar arriba y abajo */
+    box-shadow: 0 15px 35px rgba(10, 37, 64, 0.1);
+    /* Sombra que crea el efecto flotante */
+    text-align: center;
+    border-top: 3px solid var(--azul-claro);
+    border-bottom: 3px solid var(--azul-claro);
+    position: relative;
+    z-index: 10;
+}
+
+.cita-contenido {
+    max-width: 900px;
+    /* Evita que el texto se estire demasiado en pantallas gigantes */
+    margin: 0 auto;
+}
+
+.cita-contenido blockquote {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    /* Letra elegante y bonita */
+    font-size: 1.8rem;
+    font-style: italic;
+    color: var(--azul-oscuro);
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.cita-contenido cite {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #ff5a1f;
+    /* Usamos el acento naranja para que resalte */
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Responsividad para móviles */
+@media (max-width: 768px) {
+    .cita-flotante-full {
+        padding: 40px 15px;
+    }
+
+    .cita-contenido blockquote {
+        font-size: 1.6rem;
+    }
+
+    .cita-contenido cite {
+        font-size: 1rem;
+    }
+}
+
+/* =========================================
+   14. SECCIÓN CÁMARA EN VIVO Y MARCA DE AGUA
+   ========================================= */
+
+/* Contenedor principal para la página de biomecánica */
+.pagina-biomecanica {
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Marca de agua de fondo */
+.marca-de-agua {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('images/cuadra.png');
+
+    /* Hace que la imagen se repita en toda la pantalla */
+    background-repeat: repeat;
+
+    /* Tamaño de cada "cuadrito" repetido */
+    background-size: 250px;
+
+    opacity: 0.15;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.seccion-entrenamiento {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Punto rojo titilante de "En Vivo" */
+.punto-rojo {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: #e74c3c;
+    border-radius: 50%;
+    margin-left: 10px;
+    box-shadow: 0 0 10px #e74c3c;
+    animation: pulsar 1.5s infinite;
+}
+
+@keyframes pulsar {
+    0% {
+        transform: scale(0.95);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(0.95);
+        opacity: 1;
+    }
+}
+
+/* =========================================
+   15. CONTENEDOR DE VIDEO Y ALERTAS IA
+   ========================================= */
+
+.video-container {
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--sombra-fuerte);
+    border: 4px solid var(--azul-oscuro);
+    background-color: #000;
+}
+
+.video-container video {
+    border: none;
+    margin-bottom: 0;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* Contenedor Flotante de Alertas */
+.alert-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+    /* Para no bloquear clics en la cámara */
+}
+
+/* Estilo individual de la alerta */
+.alerta {
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: var(--blanco);
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    /* Efecto cristal moderno */
+    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transform-origin: right center;
+    max-width: 280px;
+    text-align: left;
+    line-height: 1.3;
+}
+
+/* Colores de las alertas con transparencia para ver la cámara detrás */
+.alerta-exito {
+    background-color: rgba(39, 174, 96, 0.85);
+    border-left: 5px solid #1e8449;
+}
+
+.alerta-advertencia {
+    background-color: rgba(243, 156, 18, 0.85);
+    border-left: 5px solid #d68910;
+}
+
+.alerta-error {
+    background-color: rgba(231, 76, 60, 0.85);
+    border-left: 5px solid #c0392b;
+}
+
+/* Animaciones de entrada y salida de las alertas */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100px) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+}
