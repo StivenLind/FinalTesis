@@ -8,12 +8,16 @@ import cv2
 import numpy as np
 import pandas as pd
 import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+from pathlib import Path
 
-IMAGES_PATH = "ImagenesTesis"
+IMAGES_PATH = "Entrenamiento Data Set"
 OUTPUT_CSV = "dataset_frontal_voleibol.csv"
+EXTENSIONES_IMAGEN = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}
 
-mp_pose = mp.solutions.pose
-pose = mp_pose.Pose(static_image_mode=True)
+BASE_DIR = Path(__file__).resolve().parent
+POSE_MODEL_PATH = BASE_DIR / "pose_landmarker_lite.task"
 
 
 def distance_xy(a, b):
@@ -82,35 +86,70 @@ def auto_label(features):
     return "CORRECTO" if score >= 3 else "INCORRECTO"
 
 
+def es_imagen(path: Path):
+    return path.suffix.lower() in EXTENSIONES_IMAGEN
+
+
+def leer_imagen(path: Path):
+    data = np.fromfile(str(path), dtype=np.uint8)
+    if data.size == 0:
+        return None
+    return cv2.imdecode(data, cv2.IMREAD_COLOR)
+
+
 def main():
     rows = []
+    dataset_dir = Path(IMAGES_PATH)
+    if not dataset_dir.exists() or not dataset_dir.is_dir():
+        raise FileNotFoundError(f"No se encontro la carpeta del dataset: {dataset_dir}")
 
-    for img_name in os.listdir(IMAGES_PATH):
-        if not img_name.lower().endswith((".png", ".jpg", ".jpeg")):
-            continue
+    if not POSE_MODEL_PATH.exists():
+        raise FileNotFoundError(f"No se encontro el modelo de pose: {POSE_MODEL_PATH}")
 
-        img_path = os.path.join(IMAGES_PATH, img_name)
-        image = cv2.imread(img_path)
-        if image is None:
-            continue
+    imagenes = [p for p in dataset_dir.rglob("*") if p.is_file() and es_imagen(p)]
+    total_imagenes = len(imagenes)
+    con_pose = 0
+    sin_pose = 0
+    fallos_lectura = 0
 
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        results = pose.process(image_rgb)
-        if not results.pose_landmarks:
-            continue
+    base_options = python.BaseOptions(model_asset_path=str(POSE_MODEL_PATH))
+    options = vision.PoseLandmarkerOptions(
+        base_options=base_options,
+        running_mode=vision.RunningMode.IMAGE,
+        num_poses=1,
+    )
 
-        landmarks = results.pose_landmarks.landmark
-        features = build_features(landmarks)
+    with vision.PoseLandmarker.create_from_options(options) as pose:
+        for img_path in imagenes:
+            image = leer_imagen(img_path)
+            if image is None:
+                fallos_lectura += 1
+                continue
 
-        row = {"imagen": img_name}
-        row.update(features)
-        row["clasificacion"] = auto_label(features)
-        rows.append(row)
+            image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image_rgb)
+            results = pose.detect(mp_image)
+            if not results.pose_landmarks:
+                sin_pose += 1
+                continue
+
+            con_pose += 1
+            landmarks = results.pose_landmarks[0]
+            features = build_features(landmarks)
+
+            row = {"imagen": str(img_path.relative_to(dataset_dir))}
+            row.update(features)
+            row["clasificacion"] = auto_label(features)
+            rows.append(row)
 
     df = pd.DataFrame(rows)
     df.to_csv(OUTPUT_CSV, index=False)
     print(f"Dataset frontal generado correctamente: {OUTPUT_CSV}")
     print(f"Total de muestras: {len(df)}")
+    print(f"Imagenes encontradas: {total_imagenes}")
+    print(f"Con pose detectada: {con_pose}")
+    print(f"Sin pose detectada: {sin_pose}")
+    print(f"Fallos de lectura: {fallos_lectura}")
 
 
 if __name__ == "__main__":

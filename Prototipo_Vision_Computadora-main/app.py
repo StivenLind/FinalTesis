@@ -3,7 +3,7 @@ import csv
 import os
 import time
 from threading import Lock
-from datetime import datetime
+from datetime import datetime, timezone
 
 import cv2
 import joblib
@@ -471,7 +471,7 @@ def decode_image_bytes_from_data_url(data_url):
 
 def append_analysis_row(vista, resultado, angles, feedback, metrics=None, lado=""):
     row = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "vista": vista,
         "resultado": resultado,
         "lado": lado,
@@ -563,7 +563,7 @@ def evaluate_frame():
         return jsonify({
             "ok": False,
             "message": "No se detecto pose. Ajusta tu posicion frente a la camara.",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
 
     landmarks = results.pose_landmarks[0]
@@ -596,7 +596,7 @@ def evaluate_frame():
             "feedback": frontal_feedback_messages,
             "puntos_frontal": frontal_points,
             "modelo_frontal_cargado": model_frontal is not None,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
 
     side_name, side_points = select_visible_side(landmarks)
@@ -656,7 +656,7 @@ def evaluate_frame():
             "rodilla": rodilla,
             "tobillo": tobillo,
         },
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     })
 
 
@@ -672,7 +672,7 @@ def guardar_captura():
     if not image_bytes:
         return jsonify({"ok": False, "message": "Imagen invalida para guardar."}), 400
 
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     file_name = f"captura_feedback_{timestamp}.png"
     file_path = os.path.join(CAPTURAS_DIR, file_name)
 
