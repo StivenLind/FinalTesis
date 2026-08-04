@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Técnica - IA Voleibol</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="pagina-biomecanica">
+
+    <div class="marca-de-agua"></div>
+
+    <header class="header-tecnica">
+        <nav class="nav-tecnica">
+            <div class="nav-brand-box">
+                <div class="nav-brand">
+                    <img src="images/logo-umariana.png" alt="Logo Universidad Mariana" class="nav-logo">
+                    <h2><em>IA</em> VOLEIBOL</h2>
+                </div>
+            </div>
+            <ul class="nav-links">
+            </ul>
+            <a href="index.html" class="btn-prueba">VOLVER AL INICIO ></a>
+        </nav>
+    </header>
+
+    <section class="seccion-entrenamiento">
+        <div class="entrenamiento-wrapper">
+            <h1>Entrenamiento en Tiempo Real</h1>
+            <p>Aquí se analizará la técnica del jugador mediante visión por computadora impulsada por Inteligencia
+                Artificial.</p>
+
+            <div class="camera-header">
+                <h3 class="cita-contenido camera-title">Transmisión en Vivo <span class="punto-rojo"></span></h3>
+
+                <div class="camera-controls">
+                    <label for="camera-select" class="camera-label">Seleccionar Cámara:</label>
+                    <select id="camera-select" class="camera-select">
+                        <option value="">Cargando cámaras...</option>
+                    </select>
+                    <button id="fullscreen-btn" class="btn-fullscreen" type="button">Pantalla completa</button>
+                    <button id="capture-btn" class="btn-capture" type="button">Capturar</button>
+                </div>
+            </div>
+
+            <div class="entrenamiento-layout">
+                <div id="camera-panel" class="video-container">
+
+                    <div id="alert-container" class="alert-container"></div>
+
+                    <video id="video" width="640" height="480" autoplay playsinline></video>
+                    <canvas id="canvas" width="640" height="480"
+                        style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); pointer-events: none; background-color: transparent; border: none;"></canvas>
+                </div>
+
+                <div class="estado-ia">
+                    <p><strong>Estado:</strong> <span id="estado-sistema">Inicializando...</span>
+                    </p>
+                    <p><strong>Vista detectada:</strong> <span id="vista-detectada">-</span></p>
+                    <p><strong>Lado detectado:</strong> <span id="lado-detectado">-</span></p>
+                    <p><strong>Resultado IA:</strong> <span id="resultado-ia">-</span></p>
+                    <p class="estado-ia-subtitle"><strong>Angulos:</strong></p>
+                    <ul>
+                        <li>Brazos: <span id="angulo-brazos">-</span></li>
+                        <li>Rodilla: <span id="angulo-rodilla">-</span></li>
+                        <li>Tronco: <span id="angulo-tronco">-</span></li>
+                    </ul>
+                    <p><strong>Retroalimentacion:</strong> <span id="feedback-ia">Esperando
+                            analisis...</span></p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer>
+        <p>Proyecto de Investigación - Universidad Mariana</p>
+    </footer>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cameraSelect = document.getElementById('camera-select');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const captureBtn = document.getElementById('capture-btn');
+        const cameraPanel = document.getElementById('camera-panel');
+        const estadoSistema = document.getElementById('estado-sistema');
+        const vistaDetectada = document.getElementById('vista-detectada');
+        const ladoDetectado = document.getElementById('lado-detectado');
+        const resultadoIa = document.getElementById('resultado-ia');
+        const anguloBrazos = document.getElementById('angulo-brazos');
+        const anguloRodilla = document.getElementById('angulo-rodilla');
+        const anguloTronco = document.getElementById('angulo-tronco');
+        const feedbackIa = document.getElementById('feedback-ia');
+
+        let streamActual = null;
+        let analisisActivo = false;
+        let solicitudEnCurso = false;
+        let ultimoMensaje = '';
+        let ultimaAlertaTs = 0;
+        let ultimaLectura = null;
+        const intervaloAnalisisMs = 450;
+        const apiUrl = 'http://127.0.0.1:5000/api/evaluar_frame';
+        const apiGuardarCapturaUrl = 'http://127.0.0.1:5000/api/guardar_captura';
+        const CAPTURE_WIDTH = 320;
+        const CAPTURE_HEIGHT = 240;
+        const JPEG_QUALITY = 0.55;
+
+        const capturador = document.createElement('canvas');
+        const capturadorCtx = capturador.getContext('2d');
+
+        function cambiarEstado(texto) {
+            estadoSistema.textContent = texto;
+        }
+
+        function limpiarOverlay() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function dibujarPoseLateral(puntos, scaleX = 1, scaleY = 1) {
+            if (!puntos) return;
+
+            const conexiones = [
+                ['hombro', 'codo'],
+                ['codo', 'muneca'],
+                ['cadera', 'rodilla'],
+                ['rodilla', 'tobillo']
+            ];
+
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ffffff';
+            conexiones.forEach(([a, b]) => {
+                if (!puntos[a] || !puntos[b]) return;
+                ctx.beginPath();
+                ctx.moveTo(puntos[a][0] * scaleX, puntos[a][1] * scaleY);
+                ctx.lineTo(puntos[b][0] * scaleX, puntos[b][1] * scaleY);
+                ctx.stroke();
+            });
+
+            Object.values(puntos).forEach((p) => {
+                if (!p) return;
+                ctx.beginPath();
+                ctx.arc(p[0] * scaleX, p[1] * scaleY, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#00ff95';
+                ctx.fill();
+            });
+        }
+
+        function dibujarPoseFrontal(puntos, scaleX = 1, scaleY = 1) {
+            if (!puntos) return;
+
+            const conexiones = [
+                ['hombro_izq', 'codo_izq'],
+                ['codo_izq', 'muneca_izq'],
+                ['hombro_der', 'codo_der'],
+                ['codo_der', 'muneca_der'],
+                ['hombro_izq', 'hombro_der'],
+                ['cadera_izq', 'cadera_der'],
+                ['cadera_izq', 'rodilla_izq'],
+                ['rodilla_izq', 'tobillo_izq'],
+                ['cadera_der', 'rodilla_der'],
+                ['rodilla_der', 'tobillo_der']
+            ];
+
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ffffff';
+            conexiones.forEach(([a, b]) => {
+                if (!puntos[a] || !puntos[b]) return;
+                ctx.beginPath();
+                ctx.moveTo(puntos[a][0] * scaleX, puntos[a][1] * scaleY);
+                ctx.lineTo(puntos[b][0] * scaleX, puntos[b][1] * scaleY);
+                ctx.stroke();
+            });
+
+            Object.values(puntos).forEach((p) => {
+                if (!p) return;
+                ctx.beginPath();
+                ctx.arc(p[0] * scaleX, p[1] * scaleY, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#00ff95';
+                ctx.fill();
+            });
+        }
+
+        function mostrarAlertaControlada(mensaje, tipo) {
+            const ahora = Date.now();
+            if (mensaje === ultimoMensaje && (ahora - ultimaAlertaTs) < 2500) {
+                return;
+            }
+            ultimoMensaje = mensaje;
+            ultimaAlertaTs = ahora;
+            mostrarAlerta(mensaje, tipo);
+        }
+
+        async function analizarFrame() {
+            if (!analisisActivo || solicitudEnCurso || !video.srcObject || video.readyState < 2) {
+                return;
+            }
+
+            solicitudEnCurso = true;
+            try {
+                const videoW = video.videoWidth || 640;
+                const videoH = video.videoHeight || 480;
+
+                capturador.width = CAPTURE_WIDTH;
+                capturador.height = CAPTURE_HEIGHT;
+                canvas.width = videoW;
+                canvas.height = videoH;
+
+                capturadorCtx.drawImage(video, 0, 0, capturador.width, capturador.height);
+                const dataUrl = capturador.toDataURL('image/jpeg', JPEG_QUALITY);
+
+                const resp = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: dataUrl, vista: 'auto' })
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    cambiarEstado('Error de conexion con backend');
+                    mostrarAlertaControlada('No se pudo analizar el frame.', 'error');
+                    return;
+                }
+
+                if (!data.ok) {
+                    limpiarOverlay();
+                    cambiarEstado('Pose no detectada');
+                    feedbackIa.textContent = data.message || 'No se detecto pose valida.';
+                    mostrarAlertaControlada(data.message || 'Ubicate correctamente frente a la camara.', 'advertencia');
+                    return;
+                }
+
+                limpiarOverlay();
+                const scaleX = videoW / CAPTURE_WIDTH;
+                const scaleY = videoH / CAPTURE_HEIGHT;
+
+                if (data.vista === 'frontal') {
+                    dibujarPoseFrontal(data.puntos_frontal, scaleX, scaleY);
+                } else {
+                    dibujarPoseLateral(data.puntos, scaleX, scaleY);
+                }
+
+                ultimaLectura = data;
+
+                cambiarEstado('Analizando en tiempo real');
+                vistaDetectada.textContent = (data.vista || '-').toUpperCase();
+                ladoDetectado.textContent = data.vista === 'lateral' ? (data.lado || '-') : 'N/A';
+                resultadoIa.textContent = data.resultado;
+                resultadoIa.style.color = data.resultado === 'CORRECTO' ? '#27ae60' : '#e74c3c';
+
+                if (data.vista === 'frontal') {
+                    anguloBrazos.textContent = data.angulos ? `${data.angulos.brazos}°` : '-';
+                    anguloRodilla.textContent = data.angulos ? `${data.angulos.rodilla}°` : '-';
+                    anguloTronco.textContent = data.angulos ? `${data.angulos.tronco}°` : '-';
+                } else {
+                    anguloBrazos.textContent = `${data.angulos.brazos}°`;
+                    anguloRodilla.textContent = `${data.angulos.rodilla}°`;
+                    anguloTronco.textContent = `${data.angulos.tronco}°`;
+                }
+
+                feedbackIa.textContent = (data.feedback || []).join(' | ') || 'Sin retroalimentacion.';
+                const feedbackPrincipal = (data.feedback && data.feedback.length > 0)
+                    ? data.feedback[0]
+                    : 'Analisis completado.';
+
+                if (data.resultado === 'CORRECTO') {
+                    mostrarAlertaControlada(`Tecnica correcta (${(data.vista || 'vista').toUpperCase()}). ${feedbackPrincipal}`, 'exito');
+                } else {
+                    mostrarAlertaControlada(`Tecnica mejorable (${(data.vista || 'vista').toUpperCase()}). ${feedbackPrincipal}`, 'advertencia');
+                }
+            } catch (error) {
+                cambiarEstado('Backend no disponible');
+                mostrarAlertaControlada('Inicia el servidor Python en puerto 5000.', 'error');
+            } finally {
+                solicitudEnCurso = false;
+            }
+        }
+
+        setInterval(analizarFrame, intervaloAnalisisMs);
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            if (!text) return y;
+            const words = text.split(' ');
+            let line = '';
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = `${line}${words[n]} `;
+                const testWidth = context.measureText(testLine).width;
+                if (testWidth > maxWidth && n > 0) {
+                    context.fillText(line.trim(), x, y);
+                    line = `${words[n]} `;
+                    y += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+
+            if (line.trim()) {
+                context.fillText(line.trim(), x, y);
+                y += lineHeight;
+            }
+
+            return y;
+        }
+
+        async function capturarRetroalimentacion() {
+            if (!video.srcObject || video.readyState < 2) {
+                mostrarAlerta('Aun no hay video disponible para capturar.', 'advertencia');
+                return;
+            }
+
+            const snapshotData = ultimaLectura || {
+                vista: vistaDetectada.textContent || '-',
+                lado: ladoDetectado.textContent || '-',
+                resultado: resultadoIa.textContent || '-',
+                angulos: {
+                    brazos: (anguloBrazos.textContent || '-').replace('°', ''),
+                    rodilla: (anguloRodilla.textContent || '-').replace('°', ''),
+                    tronco: (anguloTronco.textContent || '-').replace('°', ''),
+                },
+                feedback: [feedbackIa.textContent || 'Sin retroalimentacion.'],
+            };
+
+            const frameW = video.videoWidth || 640;
+            const frameH = video.videoHeight || 480;
+            const panelW = 360;
+            const padding = 24;
+            const outputW = frameW + panelW + (padding * 3);
+            const outputH = Math.max(frameH + (padding * 2), 540);
+
+            const shotCanvas = document.createElement('canvas');
+            shotCanvas.width = outputW;
+            shotCanvas.height = outputH;
+            const shotCtx = shotCanvas.getContext('2d');
+
+            const bgGradient = shotCtx.createLinearGradient(0, 0, outputW, outputH);
+            bgGradient.addColorStop(0, '#f4f8ff');
+            bgGradient.addColorStop(1, '#e7eefb');
+            shotCtx.fillStyle = bgGradient;
+            shotCtx.fillRect(0, 0, outputW, outputH);
+
+            const frameX = padding;
+            const frameY = padding;
+            shotCtx.fillStyle = '#0a2540';
+            shotCtx.fillRect(frameX - 4, frameY - 4, frameW + 8, frameH + 8);
+            shotCtx.drawImage(video, frameX, frameY, frameW, frameH);
+            shotCtx.drawImage(canvas, frameX, frameY, frameW, frameH);
+
+            const panelX = frameX + frameW + padding;
+            const panelY = padding;
+            const panelH = outputH - (padding * 2);
+
+            shotCtx.fillStyle = '#ffffff';
+            shotCtx.strokeStyle = 'rgba(17, 100, 163, 0.35)';
+            shotCtx.lineWidth = 2;
+            shotCtx.beginPath();
+            shotCtx.roundRect(panelX, panelY, panelW, panelH, 14);
+            shotCtx.fill();
+            shotCtx.stroke();
+
+            let textY = panelY + 32;
+            const textX = panelX + 20;
+            const textMaxW = panelW - 40;
+
+            shotCtx.fillStyle = '#0a2540';
+            shotCtx.font = 'bold 23px Segoe UI';
+            shotCtx.fillText('Retroalimentacion IA', textX, textY);
+
+            textY += 24;
+            shotCtx.fillStyle = '#4a5568';
+            shotCtx.font = '14px Segoe UI';
+            shotCtx.fillText(`Captura: ${new Date().toLocaleString('es-CO')}`, textX, textY);
+
+            textY += 32;
+            shotCtx.fillStyle = '#0a2540';
+            shotCtx.font = 'bold 16px Segoe UI';
+            shotCtx.fillText('Estado actual', textX, textY);
+
+            textY += 24;
+            shotCtx.fillStyle = '#1f2937';
+            shotCtx.font = '15px Segoe UI';
+            shotCtx.fillText(`Estado: ${estadoSistema.textContent || '-'}`, textX, textY);
+            textY += 24;
+            shotCtx.fillText(`Vista: ${(snapshotData.vista || '-').toString().toUpperCase()}`, textX, textY);
+            textY += 24;
+            shotCtx.fillText(`Lado: ${snapshotData.vista === 'lateral' ? (snapshotData.lado || '-') : 'N/A'}`, textX, textY);
+            textY += 24;
+
+            shotCtx.fillStyle = (snapshotData.resultado === 'CORRECTO') ? '#1e8449' : '#c0392b';
+            shotCtx.font = 'bold 18px Segoe UI';
+            shotCtx.fillText(`Resultado: ${snapshotData.resultado || '-'}`, textX, textY);
+
+            textY += 34;
+            shotCtx.fillStyle = '#0a2540';
+            shotCtx.font = 'bold 16px Segoe UI';
+            shotCtx.fillText('Angulos', textX, textY);
+
+            textY += 24;
+            shotCtx.fillStyle = '#1f2937';
+            shotCtx.font = '15px Segoe UI';
+            shotCtx.fillText(`Brazos: ${snapshotData.angulos?.brazos ?? '-'}°`, textX, textY);
+            textY += 24;
+            shotCtx.fillText(`Rodilla: ${snapshotData.angulos?.rodilla ?? '-'}°`, textX, textY);
+            textY += 24;
+            shotCtx.fillText(`Tronco: ${snapshotData.angulos?.tronco ?? '-'}°`, textX, textY);
+
+            textY += 34;
+            shotCtx.fillStyle = '#0a2540';
+            shotCtx.font = 'bold 16px Segoe UI';
+            shotCtx.fillText('Feedback', textX, textY);
+
+            textY += 24;
+            shotCtx.fillStyle = '#1f2937';
+            shotCtx.font = '14px Segoe UI';
+            const feedbackTexto = Array.isArray(snapshotData.feedback)
+                ? snapshotData.feedback.join(' | ')
+                : (snapshotData.feedback || 'Sin retroalimentacion.');
+            wrapText(shotCtx, feedbackTexto, textX, textY, textMaxW, 20);
+
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const imageDataUrl = shotCanvas.toDataURL('image/png');
+
+            const link = document.createElement('a');
+            link.download = `captura_feedback_${timestamp}.png`;
+            link.href = imageDataUrl;
+            link.click();
+
+            try {
+                const saveResp = await fetch(apiGuardarCapturaUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageDataUrl })
+                });
+                const saveData = await saveResp.json();
+
+                if (!saveResp.ok || !saveData.ok) {
+                    mostrarAlerta('Se descargo la imagen, pero no se pudo guardar en la carpeta capturas.', 'advertencia');
+                    return;
+                }
+
+                mostrarAlerta(`Captura guardada en proyecto: ${saveData.archivo}`, 'exito');
+            } catch (error) {
+                mostrarAlerta('Se descargo la imagen, pero no hubo conexion para guardar en capturas.', 'advertencia');
+            }
+        }
+
+        function isFullscreenActive() {
+            return !!(document.fullscreenElement || document.webkitFullscreenElement);
+        }
+
+        function updateFullscreenButton() {
+            fullscreenBtn.textContent = isFullscreenActive()
+                ? 'Salir de pantalla completa'
+                : 'Pantalla completa';
+        }
+
+        async function toggleFullscreen() {
+            try {
+                if (!isFullscreenActive()) {
+                    if (cameraPanel.requestFullscreen) {
+                        await cameraPanel.requestFullscreen();
+                    } else if (cameraPanel.webkitRequestFullscreen) {
+                        cameraPanel.webkitRequestFullscreen();
+                    }
+                } else if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            } catch (error) {
+                mostrarAlerta('No fue posible activar pantalla completa en este navegador.', 'error');
+            }
+        }
+
+        function handleFullscreenShortcut(event) {
+            if (event.repeat) return;
+
+            const targetTag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : '';
+            const isEditable = event.target && event.target.isContentEditable;
+            if (isEditable || ['input', 'textarea', 'select'].includes(targetTag)) {
+                return;
+            }
+
+            if ((event.key || '').toLowerCase() === 'f') {
+                event.preventDefault();
+                toggleFullscreen();
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        captureBtn.addEventListener('click', capturarRetroalimentacion);
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('keydown', handleFullscreenShortcut);
+        updateFullscreenButton();
+
+        // ==========================================
+        // GESTIÓN DE CÁMARAS
+        // ==========================================
+
+        // 1. Función para iniciar una cámara específica
+        async function iniciarCamara(deviceId) {
+            // Si ya hay una cámara encendida, la apagamos primero para liberar el hardware
+            if (streamActual) {
+                streamActual.getTracks().forEach(track => track.stop());
+            }
+
+            // Configuramos qué cámara queremos
+            const constraints = {
+                video: {
+                    deviceId: deviceId ? { exact: deviceId } : undefined,
+                    width: { ideal: 640, max: 960 },
+                    height: { ideal: 480, max: 540 },
+                    frameRate: { ideal: 24, max: 30 }
+                }
+            };
+
+            try {
+                streamActual = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = streamActual;
+                analisisActivo = true;
+                cambiarEstado('Camara conectada, esperando deteccion...');
+            } catch (error) {
+                console.error("Error al iniciar la cámara:", error);
+                mostrarAlerta("Error al conectar con la cámara seleccionada.", "error");
+                cambiarEstado('Error al abrir camara');
+            }
+        }
+
+        // 2. Función para obtener todas las cámaras conectadas
+        async function obtenerCamaras() {
+            try {
+                // Pedimos permiso de video general primero, si no, el navegador oculta los nombres de las cámaras por privacidad
+                await navigator.mediaDevices.getUserMedia({ video: true });
+
+                // Leemos los dispositivos
+                const dispositivos = await navigator.mediaDevices.enumerateDevices();
+
+                // Filtramos solo los que son cámaras de video
+                const camaras = dispositivos.filter(dispositivo => dispositivo.kind === 'videoinput');
+
+                // Limpiamos el selector
+                cameraSelect.innerHTML = '';
+
+                // Llenamos el selector con las cámaras encontradas
+                camaras.forEach((camara, index) => {
+                    const option = document.createElement('option');
+                    option.value = camara.deviceId;
+                    // Si la cámara no tiene nombre, le ponemos un nombre genérico
+                    option.text = camara.label || `Cámara ${index + 1}`;
+                    cameraSelect.appendChild(option);
+                });
+
+                // Si se encontraron cámaras, encendemos la primera de la lista
+                if (camaras.length > 0) {
+                    iniciarCamara(camaras[0].deviceId);
+                } else {
+                    mostrarAlerta("No se detectó ninguna cámara.", "error");
+                    cambiarEstado('Sin camaras detectadas');
+                }
+
+            } catch (error) {
+                console.error("Error al obtener la lista de cámaras:", error);
+                mostrarAlerta("No se pudieron detectar las cámaras. Verifica los permisos.", "error");
+                cambiarEstado('Permisos de camara no concedidos');
+            }
+        }
+
+        // 3. Escuchamos cuando el usuario cambia de cámara en el menú
+        cameraSelect.addEventListener('change', () => {
+            iniciarCamara(cameraSelect.value);
+            mostrarAlerta("Cambiando de cámara...", "advertencia");
+        });
+
+        // 4. Arrancamos el proceso al cargar la página
+        obtenerCamaras();
+
+
+        // ==========================================
+        // SISTEMA DE ALERTAS EN TIEMPO REAL
+        // ==========================================
+        function mostrarAlerta(mensaje, tipo) {
+            const container = document.getElementById('alert-container');
+
+            const alerta = document.createElement('div');
+            alerta.classList.add('alerta', `alerta-${tipo}`);
+
+            let icono = '';
+            if (tipo === 'exito') icono = '✅';
+            if (tipo === 'advertencia') icono = '⚠️';
+            if (tipo === 'error') icono = '❌';
+
+            alerta.innerHTML = `<span>${icono}</span> <span>${mensaje}</span>`;
+
+            container.appendChild(alerta);
+
+            setTimeout(() => {
+                alerta.style.animation = 'fadeOut 0.4s ease forwards';
+                setTimeout(() => {
+                    alerta.remove();
+                }, 400);
+            }, 3000);
+        }
+
+        setTimeout(() => {
+            mostrarAlerta("Iniciando modulo de vision por computadora...", "advertencia");
+        }, 1500);
+    </script>
+
+</body>
+
+</html>
